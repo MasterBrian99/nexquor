@@ -3,7 +3,6 @@
 use std::collections::HashMap;
 
 
-
 pub struct SSTable {
     file_name_and_sstable_map: HashMap<String, SSTable>,
     sstable_directory: String,

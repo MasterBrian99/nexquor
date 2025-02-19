@@ -12,3 +12,16 @@ pub struct Node {
 /// A possibly-empty subtree.
 #[derive(Debug)]
 pub struct Subtree(Option<Box<Node>>);
+
+
+impl Node {
+        pub fn new(key: String, value: String) -> Node {
+            Node {
+                key,
+                value,
+                left: Subtree(None),
+                right: Subtree(None),
+                height: 1,
+            }
+        }
+}
