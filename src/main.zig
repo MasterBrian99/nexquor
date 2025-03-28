@@ -1,24 +1,28 @@
 const std = @import("std");
+const net = std.net;
+const print = std.debug.print;
 
 pub fn main() !void {
-    // Prints to stderr (it's a shortcut based on `std.io.getStdErr()`)
-    std.debug.print("All your {s} are belong to us.\n", .{"codebase"});
+    var args = std.process.args();
+    // The first (0 index) Argument is the path to the program.
+    _ = args.skip();
+    const port_value = args.next() orelse {
+        print("expect port as command line argument\n", .{});
+        return error.NoPort;
+    };
+    const port = try std.fmt.parseInt(u16, port_value, 10);
 
-    // stdout is for the actual output of your application, for example if you
-    // are implementing gzip, then only the compressed bytes should be sent to
-    // stdout, not any debugging messages.
-    const stdout_file = std.io.getStdOut().writer();
-    var bw = std.io.bufferedWriter(stdout_file);
-    const stdout = bw.writer();
+    const peer = try net.Address.parseIp4("127.0.0.1", port);
+    // Connect to peer
+    const stream = try net.tcpConnectToAddress(peer);
+    defer stream.close();
+    print("Connecting to {}\n", .{peer});
 
-    try stdout.print("Run `zig build test` to run the tests.\n", .{});
-
-    try bw.flush(); // don't forget to flush!
-}
-
-test "simple test" {
-    var list = std.ArrayList(i32).init(std.testing.allocator);
-    defer list.deinit(); // try commenting this out and see if zig detects the memory leak!
-    try list.append(42);
-    try std.testing.expectEqual(@as(i32, 42), list.pop());
+    // Sending data to peer
+    const data = "hello zig";
+    var writer = stream.writer();
+    const size = try writer.write(data);
+    print("Sending '{s}' to peer, total written: {d} bytes\n", .{ data, size });
+    // Or just using `writer.writeAll`
+    // try writer.writeAll("hello zig");
 }
